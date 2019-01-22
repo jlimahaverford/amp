@@ -5,7 +5,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
 
 from app import app, db, twitter_api
-from app.forms import EditProfileForm, LoginForm, RegistrationForm
+from app.forms import EditProfileForm, LoginForm, RegistrationForm, SearchForm
 from app.models import User, TwitterUser
 
 
@@ -92,6 +92,25 @@ def twitter_user(twitter_username):
         screen_name=twitter_username, count=10, include_rts=False)
     cards = [twitter_api.GetStatusOembed(status_id=t.id, hide_media=True) for t in tweets]
     return render_template('twitter_user.html', cards=cards)
+
+
+@app.route('/twitter_user_search', methods=['GET', 'POST'])
+@login_required
+def twitter_user_search():
+    app.logger.info('entered /twitter_user_search endpoint.')
+    title = 'Twitter User Search'
+    form = SearchForm()
+    users = []
+    if form.validate_on_submit():
+        app.logger.info('0')
+        query = form.query.data
+        app.logger.info('about to get user list')
+        us = twitter_api.GetUsersSearch(term=query)
+        users = [u.AsDict() for u in us]
+        app.logger.info('retrieved user list')
+        title = 'Twitter User Search: {}'.format(query)
+        return render_template('twitter_user_search.html', title=title, form=form, users=users)
+    return render_template('twitter_user_search.html', title=title, form=form, users=users)
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])

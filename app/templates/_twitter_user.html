@@ -1,0 +1,8 @@
+<table>
+    <tr valign="top">
+        <td>
+            <img src="{{ user.profile_image_url }}">
+            <a href="{{ url_for('twitter_user', twitter_username=user.screen_name) }}"> {{ user.screen_name }} </a>
+        </td>
+    </tr>
+</table>
