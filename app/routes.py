@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, Markup
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
 
@@ -85,9 +85,13 @@ def twitter_user(twitter_username):
     twitter_user = TwitterUser.query.filter_by(twitter_username=twitter_username).first()
     if twitter_user is None:
         twitter_user = TwitterUser(twitter_username=twitter_username)
-    statuses = twitter_api.GetUserTimeline(screen_name=twitter_username, count=10)
-    tweets = [i.AsDict() for i in statuses]
-    return render_template('twitter_user.html', user=user, tweets=tweets)
+        db.session.add(twitter_user)
+        db.session.commit()
+        app.logger.info('Added TwitterUser: {}'.format(twitter_username))
+    tweets = twitter_api.GetUserTimeline(
+        screen_name=twitter_username, count=10, include_rts=False)
+    cards = [twitter_api.GetStatusOembed(status_id=t.id, hide_media=True) for t in tweets]
+    return render_template('twitter_user.html', cards=cards)
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
