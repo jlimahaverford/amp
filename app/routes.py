@@ -3,10 +3,12 @@ from datetime import datetime
 from flask import render_template, flash, redirect, url_for, request, Markup
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.urls import url_parse
+from sqlalchemy import func
+from sqlalchemy.sql import label
 
 from app import app, db, twitter_api
 from app.forms import EditProfileForm, LoginForm, RegistrationForm, SearchForm
-from app.models import User, TwitterUser
+from app.models import User, TwitterUser, Tweet, Amp
 
 
 @app.before_request
@@ -20,14 +22,16 @@ def before_request():
 @app.route('/index')
 @login_required
 def index():
-    posts = [
-        {
-            'author': {'username': 'John'},
-            'body': 'Beautiful day in Portland!'},
-        {
-           'author': {'username': 'Susan'},
-           'body': 'The Avengers movie was so cool!'}]
-    return render_template('index.html', title='Home', posts=posts)
+    results = db.session.query(
+        Amp.tweet_id, label('amps', func.count(Amp.user_id))).filter_by(
+        is_active=True).group_by(
+        Amp.tweet_id).order_by(
+        'amps').limit(
+        10).all()
+    cards = [
+        dict(status_id=t, amp_count=amp_count, **twitter_api.GetStatusOembed(status_id=t, hide_media=True))
+        for t, amp_count in results]
+    return render_template('index.html', title='Home', cards=cards)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -73,10 +77,13 @@ def register():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    posts = [
-        {'author': user, 'body': 'Test post #1'},
-        {'author': user, 'body': 'Test post #2'}]
-    return render_template('user.html', user=user, posts=posts)
+    amps = Amp.query.filter_by(user_id=1).order_by(Amp.timestamp.desc()).limit(10).all()
+    tweet_ids = [amp.tweet_id for amp in amps]
+    timestamps = [amp.timestamp for amp in amps]
+    cards = [
+        dict(status_id=t, **twitter_api.GetStatusOembed(status_id=t, hide_media=True))
+        for t in tweet_ids]
+    return render_template('user.html', user=user, cards=cards)
 
 
 @app.route('/twitter_user/<twitter_username>')
@@ -88,9 +95,10 @@ def twitter_user(twitter_username):
         db.session.add(twitter_user)
         db.session.commit()
         app.logger.info('Added TwitterUser: {}'.format(twitter_username))
-    tweets = twitter_api.GetUserTimeline(
-        screen_name=twitter_username, count=10, include_rts=False)
-    cards = [twitter_api.GetStatusOembed(status_id=t.id, hide_media=True) for t in tweets]
+    tweets = twitter_api.GetUserTimeline(screen_name=twitter_username, count=10, include_rts=False)
+    cards = [
+        dict(status_id=t.id, **twitter_api.GetStatusOembed(status_id=t.id, hide_media=True))
+        for t in tweets]
     return render_template('twitter_user.html', cards=cards)
 
 
@@ -127,3 +135,61 @@ def edit_profile():
         form.username.data = current_user.username
         form.about_me.data = current_user.about_me
     return render_template('edit_profile.html', title='Edit Profile', form=form)
+
+
+@app.route('/follow_twitter_user/<twitter_username>')
+@login_required
+def follow_twitter_user(twitter_username):
+    twitter_user = TwitterUser.query.filter_by(twitter_username=twitter_username).first()
+    if twitter_user is None:
+        twitter_user = TwitterUser(twitter_username=twitter_username)
+        db.session.add(twitter_user)
+        db.session.commit()
+        twitter_user = TwitterUser.query.filter_by(twitter_username=twitter_username).first()
+    current_user.follow_twitter_user(twitter_user)
+    db.session.commit()
+    flash('You are now following {}!'.format(twitter_username))
+    return redirect(url_for('twitter_user', twitter_username=twitter_username))
+
+
+@app.route('/unfollow_twitter_user/<twitter_username>')
+@login_required
+def unfollow_twitter_user(twitter_username):
+    twitter_user = TwitterUser.query.filter_by(twitter_username=twitter_username).first()
+    if twitter_user is None:
+        flash('Twitter User {} not found.'.format(twitter_username))
+        return redirect(url_for('index'))
+    current_user.unfollow_twitter_user(twitter_user)
+    db.session.commit()
+    flash('You are no longer following @{}.'.format(twitter_username))
+    return redirect(url_for('twitter_user', twitter_username=twitter_username))
+
+
+@app.route('/amp_tweet/<tweet_id>')
+@login_required
+def amp_tweet(tweet_id):
+    tweet = Tweet.query.filter_by(id=tweet_id).first()
+    if tweet is None:
+        twitter_tweet = twitter_api.GetStatus(tweet_id)
+        db.session.add(Tweet.from_twitter_tweet(twitter_tweet))
+        db.session.commit()
+        tweet = Tweet.query.filter_by(id=tweet_id).first()
+    twitter_user = TwitterUser.query.filter_by(id=tweet.twitter_user_id).first()
+    twitter_username = twitter_user.twitter_username
+    current_user.amp_tweet(tweet)
+    db.session.commit()
+    flash("You amp'ed @{}'s tweet!".format(twitter_username))
+    return redirect(url_for('user', username=current_user.username))
+
+
+@app.route('/unamp_tweet')
+@login_required
+def unamp_tweet():
+    amp = current_user.get_active_amp()
+    tweet = Tweet.query.filter_by(id=amp.tweet_id).first()
+    twitter_user = TwitterUser.query.filter_by(id=tweet.twitter_user_id).first()
+    twitter_username = twitter_user.twitter_username
+    current_user.unamp()
+    db.session.commit()
+    flash("You unamp'ed @{}'s tweet!".format(twitter_username))
+    return redirect(url_for('user', username=current_user.username))

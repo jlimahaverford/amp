@@ -1,6 +1,7 @@
 <table>
     <tr valign="top">
         {{ card.html|safe }}
+        {{card.amp_count}}&#x1F525;
         {% if current_user.is_amping_tweet(card.status_id) %}
         <a href="{{ url_for('unamp_tweet') }}">Unamp!</a>
         {% else %}
