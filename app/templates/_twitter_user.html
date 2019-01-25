@@ -1,12 +1,12 @@
 <table>
     <tr valign="top">
         <td>
-            <img src="{{ user.profile_image_url }}">
-            <a href="{{ url_for('twitter_user', twitter_username=user.screen_name) }}"> @{{ user.screen_name }} </a>
-            {% if current_user.is_following_twitter_username(user.screen_name) %}
-            <a href="{{ url_for('unfollow_twitter_user', twitter_username=user.screen_name) }}">Unfollow</a>
+            <img src="{{ twitter_user_dict.profile_image_url }}">
+            <a href="{{ url_for('twitter_user', twitter_username=twitter_user_dict.screen_name) }}"> @{{ twitter_user_dict.screen_name }} </a>
+            {% if current_user.is_following_twitter_username(twitter_user_dict.screen_name) %}
+            <a href="{{ url_for('unfollow_twitter_user', twitter_username=twitter_user_dict.screen_name) }}">Unfollow</a>
             {% else %}
-            <a href="{{ url_for('follow_twitter_user', twitter_username=user.screen_name) }}">Follow</a>
+            <a href="{{ url_for('follow_twitter_user', twitter_username=twitter_user_dict.screen_name) }}">Follow</a>
             {% endif %}
         </td>
     </tr>

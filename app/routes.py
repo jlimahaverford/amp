@@ -28,8 +28,9 @@ def index():
         Amp.tweet_id).order_by(
         'amps').limit(
         10).all()
+    #  TODO: Implement pagination using query()....pagination()
     cards = [
-        dict(status_id=t, amp_count=amp_count, **twitter_api.GetStatusOembed(status_id=t, hide_media=True))
+        dict(status_id=t, amp_count=amp_count, **twitter_api.GetStatusOembed(status_id=t, hide_media=False))
         for t, amp_count in results]
     return render_template('index.html', title='Home', cards=cards)
 
@@ -77,7 +78,7 @@ def register():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    amps = Amp.query.filter_by(user_id=1).order_by(Amp.timestamp.desc()).limit(10).all()
+    amps = Amp.query.filter_by(user_id=user.id).order_by(Amp.timestamp.desc()).limit(10).all()
     tweet_ids = [amp.tweet_id for amp in amps]
     timestamps = [amp.timestamp for amp in amps]
     cards = [
@@ -95,6 +96,7 @@ def twitter_user(twitter_username):
         db.session.add(twitter_user)
         db.session.commit()
         app.logger.info('Added TwitterUser: {}'.format(twitter_username))
+    #  TODO: Add pagination using 'max_id' and 'since'
     tweets = twitter_api.GetUserTimeline(screen_name=twitter_username, count=10, include_rts=False)
     cards = [
         dict(status_id=t.id, **twitter_api.GetStatusOembed(status_id=t.id, hide_media=True))
@@ -108,17 +110,33 @@ def twitter_user_search():
     app.logger.info('entered /twitter_user_search endpoint.')
     title = 'Twitter User Search'
     form = SearchForm()
-    users = []
     if form.validate_on_submit():
-        app.logger.info('0')
         query = form.query.data
-        app.logger.info('about to get user list')
-        us = twitter_api.GetUsersSearch(term=query)
-        users = [u.AsDict() for u in us]
-        app.logger.info('retrieved user list')
-        title = 'Twitter User Search: {}'.format(query)
-        return render_template('twitter_user_search.html', title=title, form=form, users=users)
-    return render_template('twitter_user_search.html', title=title, form=form, users=users)
+        page = 1
+        # app.logger.info('about to get user list')
+        #  TODO: Add pagination ( GetUsersSearch(term=None, page=1, count=20, include_entities=None) )
+        # us = twitter_api.GetUsersSearch(term=query, page=page, count=20)
+        # users = [u.AsDict() for u in us]
+        # app.logger.info('retrieved user list')
+        title = 'Twitter User Search: {}, Page: {}'.format(query, page)
+        return redirect(url_for('twitter_user_search_results', query=query, page=page))
+    return render_template('twitter_user_search.html', title='Twitter User Search', form=form)
+
+
+@app.route('/twitter_user_search_results/<query>/<page>')
+@login_required
+def twitter_user_search_results(query, page):
+    page = int(page)
+    title = 'Twitter User Search: "{}", Page: {}'.format(query, page)
+    twitter_users = twitter_api.GetUsersSearch(term=query, page=page, count=20)
+    twitter_user_dicts = [tu.AsDict() for tu in twitter_users]
+    return render_template(
+        'twitter_user_search_results.html',
+        title=title,
+        query=query,
+        twitter_user_dicts=twitter_user_dicts,
+        page=page)
+
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])

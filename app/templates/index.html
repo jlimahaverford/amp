@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Hi, {{ current_user.username }}!</h1>
+    <h1>The Amp Feed</h1>
     {% for card in cards %}
         {% include '_twitter_post_with_amps.html' %}
     {% endfor %}

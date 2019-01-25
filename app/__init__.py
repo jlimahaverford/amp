@@ -35,6 +35,7 @@ twitter_api = twitter.Api(
 from app import routes, models, errors
 
 if not app.debug:
+    print('Not Running Debug')
     if app.config['MAIL_SERVER']:
         auth = None
         if app.config['MAIL_USERNAME'] or app.config['MAIL_PASSWORD']:
