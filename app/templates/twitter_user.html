@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
-{% block content %}
+{% block app_content %}
     {% for card in cards %}
         {% include '_twitter_post.html' %}
     {% endfor %}

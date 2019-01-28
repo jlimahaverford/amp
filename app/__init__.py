@@ -6,14 +6,16 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail
 import twitter
-from sqlalchemy import MetaData
+from flask_bootstrap import Bootstrap
+# from sqlalchemy import MetaData
 
 from config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
-#
+
 # naming_convention = {
 #     "ix": 'ix_%(column_0_label)s',
 #     "uq": "uq_%(table_name)s_%(column_0_name)s",
@@ -22,10 +24,13 @@ app.config.from_object(Config)
 #     "pk": "pk_%(table_name)s"
 # }
 # db = SQLAlchemy(app, metadata=MetaData(naming_convention=naming_convention))
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+mail = Mail(app)
 login = LoginManager(app)
 login.login_view = 'login'
+bootstrap = Bootstrap(app)
 twitter_api = twitter.Api(
     consumer_key=app.config['TWITTER_CONSUMER_KEY'],
     consumer_secret=app.config['TWITTER_CONSUMER_SECRET'],

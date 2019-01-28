@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
-{% block content %}
-    <h1>Twitter User Search Results: query="{{query}}", page={{page}}</h1>
+{% block app_content %}
 
     {% for twitter_user_dict in twitter_user_dicts %}
         {% include '_twitter_user.html' %}
@@ -11,4 +10,5 @@
         <a href="{{ url_for('twitter_user_search_results', query=query, page=page-1) }}">Previous</a>
     {% endif %}
     <a href="{{ url_for('twitter_user_search_results', query=query, page=page+1) }}">Next</a>
+
 {% endblock %}

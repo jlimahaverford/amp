@@ -1,18 +1,13 @@
 {% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
-{% block content %}
-    <h1>Find Twitter Users!</h1>
-    <form action="" method="post" novalidate>
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.query.label }}<br>
-            {{ form.query(size=32) }}
-            {% for error in form.query.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-            {{ form.submit() }}
-        </p>
-    </form>
+{% block app_content %}
+
+    <div class="row">
+        <div class="col-md-4">
+            {{ wtf.quick_form(form) }}
+        </div>
+    </div>
 
     {% for user in users %}
         {% include '_twitter_user.html' %}
