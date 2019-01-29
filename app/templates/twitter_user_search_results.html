@@ -7,8 +7,8 @@
     {% endfor %}
 
     {% if page>1 %}
-        <a href="{{ url_for('twitter_user_search_results', query=query, page=page-1) }}">Previous</a>
+        <a href="{{ url_for('main.twitter_user_search_results', query=query, page=page-1) }}">Previous</a>
     {% endif %}
-    <a href="{{ url_for('twitter_user_search_results', query=query, page=page+1) }}">Next</a>
+    <a href="{{ url_for('main.twitter_user_search_results', query=query, page=page+1) }}">Next</a>
 
 {% endblock %}

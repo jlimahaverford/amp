@@ -2,14 +2,13 @@ import logging
 import os
 from logging.handlers import SMTPHandler, RotatingFileHandler
 
+import twitter
 from flask import Flask
+from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
+from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail
-import twitter
-from flask_bootstrap import Bootstrap
-# from sqlalchemy import MetaData
 
 from config import Config
 
@@ -27,17 +26,30 @@ app.config.from_object(Config)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
 mail = Mail(app)
+
 login = LoginManager(app)
-login.login_view = 'login'
+login.login_view = 'auth.login'
+
 bootstrap = Bootstrap(app)
+
 twitter_api = twitter.Api(
     consumer_key=app.config['TWITTER_CONSUMER_KEY'],
     consumer_secret=app.config['TWITTER_CONSUMER_SECRET'],
     access_token_key=app.config['TWITTER_ACCESS_TOKEN_KEY'],
     access_token_secret=app.config['TWITTER_ACCESS_TOKEN_SECRET'])
 
-from app import routes, models, errors
+from app.errors import bp as errors_bp
+app.register_blueprint(errors_bp)
+
+from app.auth import bp as auth_bp
+app.register_blueprint(auth_bp, url_prefix='/auth')
+
+from app.main import bp as main_bp
+app.register_blueprint(main_bp, url_prefix='/main')
+
+from app import models
 
 if not app.debug:
     print('Not Running Debug')
