@@ -1,5 +1,8 @@
-from app import app, db
+from app import create_app, db
 from app.models import User, TwitterUser, Tweet, Amp
+
+
+app = create_app()
 
 @app.shell_context_processor
 def make_shell_context():
@@ -9,4 +12,3 @@ def make_shell_context():
         'TwitterUser': TwitterUser, 
         'Tweet': Tweet,
         'Amp': Amp}
-
