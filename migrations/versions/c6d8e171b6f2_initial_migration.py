@@ -1,8 +1,8 @@
-"""initial migrate
+"""initial_migration
 
-Revision ID: 03de6affce95
+Revision ID: c6d8e171b6f2
 Revises: 
-Create Date: 2019-01-29 16:49:15.302308
+Create Date: 2019-01-29 17:05:05.429015
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '03de6affce95'
+revision = 'c6d8e171b6f2'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,7 +37,7 @@ def upgrade():
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=True)
     op.create_index(op.f('ix_user_username'), 'user', ['username'], unique=True)
     op.create_table('tweet',
-    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('id', sa.BigInteger(), nullable=False),
     sa.Column('twitter_user_id', sa.Integer(), nullable=True),
     sa.Column('body', sa.String(length=280), nullable=True),
     sa.Column('timestamp', sa.DateTime(), nullable=True),
@@ -54,7 +54,7 @@ def upgrade():
     op.create_table('amp',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('tweet_id', sa.Integer(), nullable=True),
+    sa.Column('tweet_id', sa.BigInteger(), nullable=True),
     sa.Column('timestamp', sa.DateTime(), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['tweet_id'], ['tweet.id'], ),

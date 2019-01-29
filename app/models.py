@@ -125,7 +125,7 @@ class User(UserMixin, db.Model):
 
 
 class Tweet(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     twitter_user_id = db.Column(db.Integer, db.ForeignKey('twitter_user.id'))
     body = db.Column(db.String(280))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
@@ -146,7 +146,7 @@ class Tweet(db.Model):
 class Amp(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    tweet_id = db.Column(db.Integer, db.ForeignKey('tweet.id'))
+    tweet_id = db.Column(db.BigInteger, db.ForeignKey('tweet.id'))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     is_active = db.Column(db.Boolean(), default=False)
 
