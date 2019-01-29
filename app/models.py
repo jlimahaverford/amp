@@ -35,7 +35,6 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     amps = db.relationship('Amp', backref=backref('amper', uselist=False), lazy='dynamic')
-    active_amp_id = db.Column(db.Integer)
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     twitter_follows = db.relationship(
@@ -43,6 +42,7 @@ class User(UserMixin, db.Model):
         primaryjoin=(twitter_user_follow.c.user_id == id),
         secondaryjoin=(twitter_user_follow.c.twitter_user_id == TwitterUser.id),
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
+    active_amp_id = db.Column(db.Integer)
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
