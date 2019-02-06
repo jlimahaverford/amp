@@ -26,7 +26,7 @@ def index():
         Amp.tweet_id, label('amps', func.count(Amp.user_id))).filter_by(
         is_active=True).group_by(
         Amp.tweet_id).order_by(
-        'amps').limit(
+        'amps desc').limit(
         10).all()
     #  TODO: Implement pagination using query()....pagination()
     cards = [
