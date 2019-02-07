@@ -41,10 +41,18 @@ def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     amps = Amp.query.filter_by(user_id=user.id).order_by(Amp.timestamp.desc()).limit(10).all()
     tweet_ids = [amp.tweet_id for amp in amps]
-    timestamps = [amp.timestamp for amp in amps]
-    cards = [
-        dict(status_id=t, **twitter_api.GetStatusOembed(status_id=t, hide_media=True))
-        for t in tweet_ids]
+    # timestamps = [amp.timestamp for amp in amps]
+    result_dict = dict(db.session.query(
+        Amp.tweet_id, label('amps', func.count(Amp.user_id))).filter_by(
+        is_active=True).filter(Amp.tweet_id.in_(tweet_ids)).group_by(
+        Amp.tweet_id).order_by(
+        'amps desc').limit(
+        10).all())
+    cards = [dict(
+        status_id=t,
+        amp_count=result_dict.get(t, 0),
+        **twitter_api.GetStatusOembed(status_id=t, hide_media=True))
+            for t in tweet_ids]
     return render_template('user.html', user=user, cards=cards)
 
 
@@ -59,9 +67,18 @@ def twitter_user(twitter_username):
         current_app.logger.info('Added TwitterUser: {}'.format(twitter_username))
     #  TODO: Add pagination using 'max_id' and 'since'
     tweets = twitter_api.GetUserTimeline(screen_name=twitter_username, count=10, include_rts=False)
-    cards = [
-        dict(status_id=t.id, **twitter_api.GetStatusOembed(status_id=t.id, hide_media=True))
-        for t in tweets]
+    tweet_ids = [t.id for t in tweets]
+    result_dict = dict(db.session.query(
+        Amp.tweet_id, label('amps', func.count(Amp.user_id))).filter_by(
+        is_active=True).filter(Amp.tweet_id.in_(tweet_ids)).group_by(
+        Amp.tweet_id).order_by(
+        'amps desc').limit(
+        10).all())
+    cards = [dict(
+        status_id=t,
+        amp_count=result_dict.get(t, 0),
+        **twitter_api.GetStatusOembed(status_id=t, hide_media=False))
+             for t in tweet_ids]
     return render_template('twitter_user.html', cards=cards)
 
 
