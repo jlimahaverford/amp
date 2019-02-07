@@ -1,7 +1,7 @@
 <table>
     <tr valign="top">
         {% if current_user.is_amping_tweet(card.status_id) %}
-            <a href="{{ url_for('main.unamp_tweet') }}">{{card.amp_count}}⚡️ Un-Amp</a>
+            <a href="{{ url_for('main.unamp_tweet') }}">{{card.amp_count}}&#x1F525;️ Un-Amp</a>
         {% else %}
             <a href="{{ url_for('main.amp_tweet', tweet_id=card.status_id) }}">{{card.amp_count}}&#x1F525; Amp</a>
         {% endif %}
