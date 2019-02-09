@@ -1,0 +1,22 @@
+<div class="twitter-user-card">
+        <div>
+            <p style="text-align:left;">
+                {% if twitter_user_card.verified %}
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcThgUCXVdeSULj-BvNUOwgYkE6wFL_ihfpA1FhvQL2L0cfGivy4Cg" height="20" width="20">
+                {% endif %}
+                <a href="{{ url_for('main.twitter_user', twitter_username=twitter_user_card.screen_name) }}"> @{{ twitter_user_card.screen_name }} </a>
+                <span style="float:right;">
+                    {% if current_user.is_following_twitter_username(twitter_user_card.screen_name) %}
+                        <a href="{{ url_for('main.unfollow_twitter_user', twitter_username=twitter_user_card.screen_name) }}">Unfollow</a>
+                    {% else %}
+                        <a href="{{ url_for('main.follow_twitter_user', twitter_username=twitter_user_card.screen_name) }}">Follow</a>
+                    {% endif %}
+                </span>
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('main.twitter_user', twitter_username=twitter_user_card.screen_name) }}">
+                <img src="{{ twitter_user_card.profile_image_url }}" height="200" width="200">
+            </a>
+        </div>
+</div>

@@ -6,8 +6,8 @@
 
 {% block app_content %}
 <div class="card-group">
-    {% for card in cards %}
-        {% include '_twitter_post_with_amps.html' %}
+    {% for tweet_card in tweet_cards %}
+        {% include '_tweet_card.html' %}
     {% endfor %}
 </div>
 {% endblock %}

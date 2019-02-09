@@ -1,0 +1,26 @@
+
+<div class="user-card">
+    <span style="text-align:left;">
+        <a href="{{ url_for('main.user', username=user_card.user.username) }}">
+            {{ user_card.user.username }}
+        </a>
+        <span style="float:right;">
+            <a href="{{ url_for('main.user', username=user_card.user.username) }}">
+                Follow
+            </a>
+        </span>
+    </span>
+    <a href="{{ url_for('main.user', username=user_card.user.username) }}">
+        <img src="{{ user_card.user.avatar(200) }}">
+    </a>
+    {% if user_card.user.about_me %}
+        <i> {{ user_card.user.about_me }} </i>
+        {% if user_card.user == current_user %}
+            <a href="{{ url_for('main.edit_profile') }}">
+                Edit
+            </a>
+        {% endif %}
+        <br>
+    {% endif %}
+    {{ user_card.event_tuple[0].display() + user_card.event_tuple[1].date().strftime('%b %d, %Y') }}.
+</div>

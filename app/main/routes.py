@@ -7,8 +7,9 @@ from app import db, twitter_api
 from app.main.forms import EditProfileForm, SearchForm
 from app.models import User, TwitterUser, Tweet, Amp
 from app.main import bp
-from app.main.db_utils import get_amp_dict_from_ids, get_amp_dict_leaderboard
+from app.main.db_utils import get_amp_dict_from_ids, get_amp_dict_leaderboard, get_num_amps_from_tweet_id
 from app.main.utils import get_bigger_twitter_user_image_url
+from app.main.cards import UserCard, UserEvent, TweetCard, TwitterUserCard
 
 
 @bp.before_request
@@ -25,10 +26,10 @@ def index():
     #  TODO: Implement pagination using query()....pagination()
     #  TODO: Implement "Tweeted at <timestamp>"
     result_dict = get_amp_dict_leaderboard()
-    cards = [
-        dict(status_id=t, amp_count=amp_count, **twitter_api.GetStatusOembed(status_id=t, hide_media=False))
-        for t, amp_count in result_dict.items()]
-    return render_template('index.html', title='Home', cards=cards)
+    tweet_cards = [
+        TweetCard(tweet_id=tweet_id, num_amps=num_amps, hide_media=False)
+        for tweet_id, num_amps in result_dict.items()]
+    return render_template('index.html', title='Home', tweet_cards=tweet_cards)
 
 
 @bp.route('/user/<username>')
@@ -36,17 +37,32 @@ def index():
 def user(username):
     #  TODO: Implement pagination
     #  TODO: Implement "Amped at <timestamp>"
+    page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(username=username).first_or_404()
-    amps = Amp.query.filter_by(user_id=user.id).order_by(Amp.timestamp.desc()).limit(10).all()
-    tweet_ids = [amp.tweet_id for amp in amps]
-    timestamps = [amp.timestamp for amp in amps]
-    result_dict = get_amp_dict_from_ids(tweet_ids)
-    cards = [dict(
-        status_id=t,
-        amp_count=result_dict.get(t, 0),
-        **twitter_api.GetStatusOembed(status_id=t, hide_media=True))
-            for t in tweet_ids]
-    return render_template('user.html', user=user, cards=cards)
+    user_card = UserCard(user=user)
+    title = "{}'s Amp Profile".format(user.username)
+
+    current_amp = Amp.query.filter_by(
+        id=user.active_amp_id).first()
+    current_amp_tweet_card = TweetCard(tweet_id=current_amp.tweet_id, hide_media=False)
+
+    amps = Amp.query.filter_by(
+        user_id=user.id, is_active=False).order_by(
+        Amp.timestamp.desc()).paginate(
+        page, current_app.config['TWEETS_PER_PAGE'], False)
+    tweet_ids, timestamps = zip(*[(amp.tweet_id, amp.timestamp) for amp in amps.items])
+    result_dict = get_amp_dict_from_ids(list(set(tweet_ids)))
+    tweet_cards = [TweetCard(tweet_id=tweet_id, num_amps=result_dict.get(tweet_id, 0))
+             for tweet_id in tweet_ids]
+
+    next_url = (url_for('main.user', username=username, page=amps.next_num)
+                if amps.has_next else None)
+    prev_url = (url_for('main.user', username=username, page=amps.prev_num)
+                if amps.has_prev else None)
+    return render_template(
+        'user.html', title=title, user_card=user_card,
+        current_amp_tweet_card=current_amp_tweet_card, tweet_cards=tweet_cards,
+        next_url=next_url, prev_url=prev_url)
 
 
 @bp.route('/twitter_user/<twitter_username>', defaults={'max_id': None})
@@ -55,19 +71,25 @@ def user(username):
 def twitter_user(twitter_username, max_id):
     #  TODO: Implement pagination using 'max_id' and 'since'
     #  TODO: Implement "Tweeted at <timestamp>"
+    title = "@{}'s Profile".format(twitter_username)
     twitter_user = TwitterUser.query.filter_by(twitter_username=twitter_username).first()
     if twitter_user is None:
         twitter_user = TwitterUser(twitter_username=twitter_username)
         db.session.add(twitter_user)
         db.session.commit()
         current_app.logger.info('Added TwitterUser: {}'.format(twitter_username))
+
+    twitter_user_card = TwitterUserCard(twitter_api.GetUser(screen_name=twitter_username))
     tweets = twitter_api.GetUserTimeline(screen_name=twitter_username, count=10, include_rts=True, max_id=max_id)
     tweet_ids = [t.id for t in tweets]
     result_dict = get_amp_dict_from_ids(tweet_ids)
-    cards = [dict(status_id=t, amp_count=result_dict.get(t, 0),
-                  **twitter_api.GetStatusOembed(status_id=t, hide_media=False))
-             for t in tweet_ids]
-    return render_template('twitter_user.html', cards=cards)
+    tweet_cards = [TweetCard(tweet_id=tweet_id, num_amps=result_dict.get(tweet_id, 0), hide_media=False)
+             for tweet_id in tweet_ids]
+    return render_template(
+        'twitter_user.html',
+        title=title,
+        twitter_user_card=twitter_user_card,
+        tweet_cards=tweet_cards)
 
 
 @bp.route('/twitter_user_search', methods=['GET', 'POST'])
@@ -75,26 +97,24 @@ def twitter_user(twitter_username, max_id):
 def twitter_user_search():
     form = SearchForm()
     if form.validate_on_submit():
-        return redirect(url_for('main.twitter_user_search_results', query=form.query.data, page=1))
+        return redirect(url_for('main.twitter_user_search_results', query=form.query.data))
     return render_template('twitter_user_search.html', title='Twitter User Search', form=form)
 
 
-@bp.route('/twitter_user_search_results/<query>', defaults={'page': 1})
-@bp.route('/twitter_user_search_results/<query>/<page>')
+@bp.route('/twitter_user_search_results/<query>')
 @login_required
-def twitter_user_search_results(query, page):
-    page = int(page)
-    title = 'Twitter User Search: "{}", Page: {}'.format(query, page)
+def twitter_user_search_results(query):
+    page = request.args.get('page', 1, type=int)
+    title = 'Twitter User Search: {}'.format(query)
     twitter_users = twitter_api.GetUsersSearch(term=query, page=page, count=20)
-    twitter_user_dicts = [tu.AsDict() for tu in twitter_users]
-    for tud in twitter_user_dicts:
-        tud['profile_image_url'] = get_bigger_twitter_user_image_url(tud['profile_image_url'])
+    twitter_user_cards = [TwitterUserCard(tu) for tu in twitter_users]
+    next_url = url_for('main.twitter_user_search_results', query=query, page=page+1)
+    prev_url = (url_for('main.twitter_user_search_results', query=query, page=page-1)
+                if page > 1 else None)
     return render_template(
-        'twitter_user_search_results.html',
-        title=title,
-        query=query,
-        twitter_user_dicts=twitter_user_dicts,
-        page=page)
+        'twitter_user_search_results.html', title=title, query=query,
+        twitter_user_cards=twitter_user_cards, page=page, next_url=next_url,
+        prev_url=prev_url)
 
 
 @bp.route('/edit_profile', methods=['GET', 'POST'])
@@ -172,29 +192,34 @@ def unamp_tweet():
     return redirect(url_for('main.index'))
 
 
-@bp.route('/who_amping_tweet/<tweet_id>', defaults={'page': 1})
-@bp.route('/who_amping_tweet/<tweet_id>/<page>')
+@bp.route('/who_amping_tweet/<tweet_id>')
 @login_required
-def who_amping_tweet(tweet_id, page):
-    page = int(page)
+def who_amping_tweet(tweet_id):
     tweet_id = int(tweet_id)
-    result_dict = get_amp_dict_from_ids([tweet_id])
-    current_app.logger.info(result_dict)
-    current_app.logger.info(result_dict.get(tweet_id, 0))
-    current_app.logger.info(tweet_id)
-    card = dict(amp_count=result_dict.get(tweet_id, 0),
-                **twitter_api.GetStatusOembed(status_id=tweet_id))
-    title = "Who's Amping {}'s Tweet?".format(card['author_name'])
-    results = db.session.query(
+    page = request.args.get('page', 1, type=int)
+
+    tweet_card = TweetCard(tweet_id=tweet_id, hide_media=False)
+    title = "Who's Amping @{}'s Tweet?".format(tweet_card.screen_name)
+    amps = db.session.query(
         User, Amp).filter(
         User.id == Amp.user_id).filter(
         Amp.tweet_id == tweet_id).filter(
         Amp.is_active).order_by(
-        Amp.timestamp.desc()).all()
+        Amp.timestamp.desc()).paginate(
+        page, current_app.config['TWEETS_PER_PAGE'], False)
+    user_cards = [
+        UserCard(user, (UserEvent.AMPED_TWEET, amp.timestamp))
+        for user, amp in amps.items]
+
+    next_url = (url_for('main.who_amping_tweet', tweet_id=tweet_id, page=amps.next_num)
+                if amps.has_next else None)
+    prev_url = (url_for('main.who_amping_tweet', tweet_id=tweet_id, page=amps.prev_num)
+                if amps.has_prev else None)
     return render_template(
         'who_amping_tweet.html',
         title=title,
-        results=results,
+        user_cards=user_cards,
         tweet_id=tweet_id,
-        card=card,
-        page=page)
+        tweet_card=tweet_card,
+        next_url=next_url,
+        prev_url=prev_url)

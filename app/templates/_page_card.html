@@ -1,0 +1,12 @@
+<div class="page-bar">
+    <span style="text-align:left;">
+        {% if prev_url %}
+        <a href="{{ prev_url }}">Previous</a>
+        {% endif %}
+        <span style="float:right;">
+            {% if next_url %}
+            <a href="{{ next_url }}">Next</a>
+            {% endif %}
+        </span>
+    </span>
+</div>

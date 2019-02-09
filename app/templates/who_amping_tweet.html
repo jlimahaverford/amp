@@ -2,17 +2,17 @@
 
 {% block app_content %}
 
-<h2>Tweet: </h2>
-{% include '_twitter_post_with_amps.html' %}
+    {% include '_tweet_card.html' %}
 
-<h2>Users: </h2>
-{% for user, amp in results %}
-    {% include '_user_amping_tweet.html' %}
-{% endfor %}
-
-{% if page>1 %}
-    <a href="{{ url_for('main.who_amping_tweet', tweet_id=tweet_id, page=page-1) }}">Previous</a>
-{% endif %}
-<a href="{{ url_for('main.who_amping_tweet', tweet_id=tweet_id, page=page+1) }}">Next</a>
+    {% if user_cards %}
+        <h2>Users: </h2>
+        {% for user_card in user_cards %}
+            {% include '_user_card.html' %}
+        {% endfor %}
+    {% else %}
+        <p>
+            No one is currently amping this tweet.
+        </p>
+    {% endif %}
 
 {% endblock %}

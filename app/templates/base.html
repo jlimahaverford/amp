@@ -52,7 +52,10 @@
         {% endif %}
         {% endwith %}
 
-        {# application content needs to be provided in the app_content block #}
         {% block app_content %}{% endblock %}
+
+        {% if (next_url or prev_url) %}
+            {% include '_page_card.html' %}
+        {% endif %}
     </div>
 {% endblock %}

@@ -2,13 +2,8 @@
 
 {% block app_content %}
 
-    {% for twitter_user_dict in twitter_user_dicts %}
-        {% include '_twitter_user.html' %}
+    {% for twitter_user_card in twitter_user_cards %}
+        {% include '_twitter_user_card.html' %}
     {% endfor %}
-
-    {% if page>1 %}
-        <a href="{{ url_for('main.twitter_user_search_results', query=query, page=page-1) }}">Previous</a>
-    {% endif %}
-    <a href="{{ url_for('main.twitter_user_search_results', query=query, page=page+1) }}">Next</a>
 
 {% endblock %}

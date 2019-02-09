@@ -10,8 +10,19 @@
   padding: 8px 8px 8px 8px;
   margin: 10px 0px;
 }
+/* On mouse-over, add a deeper shadow */
+.card:hover {
+  box-shadow: 1px 1px 4px 4px rgba(0,0,0,0.2);
+}
+.card a {
+  color: inherit;
+  font-weight: normal;
+  text-decoration: none;
+  outline: 0 none;
+}
 
 
+/* Add shadows to create the "card" effect */
 .twitter-user-card {
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   transition: 0.3s;
@@ -23,9 +34,20 @@
   padding: 8px 8px 8px 8px;
   margin: 10px 0px;
 }
+/* On mouse-over, add a deeper shadow */
+.twitter-user-card:hover {
+  box-shadow: 1px 1px 4px 4px rgba(0,0,0,0.2);
+}
+.twitter-user-card a {
+  color: inherit;
+  font-weight: normal;
+  text-decoration: none;
+  outline: 0 none;
+}
 
 
-.amp-user-card {
+/* Add shadows to create the "card" effect */
+.user-card {
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   transition: 0.3s;
   border-color: #eee #ddd #bbb;;
@@ -36,23 +58,51 @@
   padding: 8px 8px 8px 8px;
   margin: 10px 0px;
 }
-
 /* On mouse-over, add a deeper shadow */
-.card:hover {
+.user-card:hover {
   box-shadow: 1px 1px 4px 4px rgba(0,0,0,0.2);
 }
-
-.card a {
+.user-card a {
   color: inherit;
   font-weight: normal;
   text-decoration: none;
   outline: 0 none;
 }
 
-.card a:hover,
-blockquote.twitter-tweet a:focus {
-  text-decoration: underline;
+a:hover{
+  -webkit-stroke-width: 5.3px;
+  -webkit-stroke-color: #FFFFFF;
+  -webkit-fill-color: #FFFFFF;
+  text-shadow: 1px 0px 20px yellow;
 }
 
 
+/* Add shadows to create the "card" effect */
+.page-bar {
+  max-width: 550px;
+  height: 40px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: 0.3s;
+  border-color: #eee #ddd #bbb;;
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 1px;
+  padding: 8px 8px 8px 8px;
+  margin: 10px 0px;
+}
+/* On mouse-over, add a deeper shadow */
+.page-bar:hover {
+  box-shadow: 1px 1px 4px 4px rgba(0,0,0,0.2);
+}
+.page-bar a {
+  color: inherit;
+  font-weight: normal;
+  text-decoration: none;
+  outline: 0 none;
+}
 
+
+body {
+  /* Margin bottom by footer height */
+  margin-bottom: 60px;
+}

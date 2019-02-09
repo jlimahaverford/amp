@@ -7,6 +7,14 @@ from app.models import Amp
 TWEETS_PER_PAGE = 10
 
 
+def get_num_amps_from_tweet_id(tweet_id):
+    result = db.session.query(
+        label('amps', func.count(Amp.user_id))).filter_by(
+        is_active=True, tweet_id=tweet_id).group_by(
+        Amp.tweet_id).first()
+    return 0 if result is None else result[0]
+
+
 def get_amp_dict_from_ids(tweet_ids, num_tweets=TWEETS_PER_PAGE):
     return dict(db.session.query(
         Amp.tweet_id, label('amps', func.count(Amp.user_id))).filter_by(

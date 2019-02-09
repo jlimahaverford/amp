@@ -2,7 +2,12 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    {% for card in cards %}
-        {% include '_twitter_post_with_amps.html' %}
+    {% include '_twitter_user_card.html' %}
+
+    <h2>
+        Tweets:
+    </h2>
+    {% for tweet_card in tweet_cards %}
+        {% include '_tweet_card.html' %}
     {% endfor %}
 {% endblock %}
