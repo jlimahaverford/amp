@@ -155,3 +155,6 @@ class Amp(db.Model):
 
     def deactivate(self):
         self.is_active = False
+
+    def get_date(self):
+        return self.timestamp.date()
