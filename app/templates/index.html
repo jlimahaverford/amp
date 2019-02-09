@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 
+<head>
+<meta name="twitter:widgets:theme" content="dark">
+</head>
+
 {% block app_content %}
+<div class="card-group">
     {% for card in cards %}
         {% include '_twitter_post_with_amps.html' %}
     {% endfor %}
+</div>
 {% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+    <h2>Tweet: </h2>
+
+    {{ card.html|safe }}
+
+    <h2>Users: </h2>
+
+    {% for user, amp in results %}
+        {% include '_user_amping_tweet.html' %}
+    {% endfor %}
+
+    {% if page>1 %}
+        <a href="{{ url_for('main.who_amping_tweet', tweet_id=tweet_id, page=page-1) }}">Previous</a>
+    {% endif %}
+    <a href="{{ url_for('main.who_amping_tweet', tweet_id=tweet_id, page=page+1) }}">Next</a>
+
+{% endblock %}
