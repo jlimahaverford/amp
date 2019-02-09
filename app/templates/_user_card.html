@@ -1,6 +1,6 @@
 
 <div class="user-card">
-    <span style="text-align:left;">
+    <p style="text-align:left;">
         <a href="{{ url_for('main.user', username=user_card.user.username) }}">
             {{ user_card.user.username }}
         </a>
@@ -9,7 +9,7 @@
                 Follow
             </a>
         </span>
-    </span>
+    </p>
     <a href="{{ url_for('main.user', username=user_card.user.username) }}">
         <img src="{{ user_card.user.avatar(200) }}">
     </a>
@@ -22,5 +22,8 @@
         {% endif %}
         <br>
     {% endif %}
-    {{ user_card.event_tuple[0].display() + user_card.event_tuple[1].date().strftime('%b %d, %Y') }}.
+
+    <p>
+        {{ user_card.event_tuple[0].display() + user_card.event_tuple[1].date().strftime('%b %d, %Y') }}.
+    </p>
 </div>
