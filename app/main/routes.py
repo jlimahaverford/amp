@@ -156,7 +156,7 @@ def amp_tweet(tweet_id):
     current_user.amp_tweet(tweet)
     db.session.commit()
     flash("You amp'ed @{}'s tweet!".format(twitter_username))
-    return redirect(url_for('main.user', username=current_user.username))
+    return redirect(url_for('main.index'))
 
 
 @bp.route('/unamp_tweet')
@@ -169,7 +169,7 @@ def unamp_tweet():
     current_user.unamp()
     db.session.commit()
     flash("You unamp'ed @{}'s tweet!".format(twitter_username))
-    return redirect(url_for('main.user', username=current_user.username))
+    return redirect(url_for('main.index'))
 
 
 @bp.route('/who_amping_tweet/<tweet_id>', defaults={'page': 1})
