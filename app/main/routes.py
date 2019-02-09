@@ -205,7 +205,7 @@ def who_amping_tweet(tweet_id):
         User.id == Amp.user_id).filter(
         Amp.tweet_id == tweet_id).filter(
         Amp.is_active).order_by(
-        Amp.timestamp.desc()).paginate(
+        Amp.timestamp.asc()).paginate(
         page, current_app.config['TWEETS_PER_PAGE'], False)
     user_cards = [
         UserCard(user, (UserEvent.AMPED_TWEET, amp.timestamp))
