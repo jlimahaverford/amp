@@ -177,7 +177,13 @@ def unamp_tweet():
 @login_required
 def who_amping_tweet(tweet_id, page):
     page = int(page)
-    card = twitter_api.GetStatusOembed(status_id=tweet_id)
+    tweet_id = int(tweet_id)
+    result_dict = get_amp_dict_from_ids([tweet_id])
+    current_app.logger.info(result_dict)
+    current_app.logger.info(result_dict.get(tweet_id, 0))
+    current_app.logger.info(tweet_id)
+    card = dict(amp_count=result_dict.get(tweet_id, 0),
+                **twitter_api.GetStatusOembed(status_id=tweet_id))
     title = "Who's Amping {}'s Tweet?".format(card['author_name'])
     results = db.session.query(
         User, Amp).filter(
@@ -190,5 +196,5 @@ def who_amping_tweet(tweet_id, page):
         title=title,
         results=results,
         tweet_id=tweet_id,
-        card=twitter_api.GetStatusOembed(status_id=tweet_id),
+        card=card,
         page=page)
