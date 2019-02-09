@@ -25,11 +25,12 @@ def before_request():
 def index():
     #  TODO: Implement pagination using query()....pagination()
     #  TODO: Implement "Tweeted at <timestamp>"
+    title = 'Home'
     result_dict = get_amp_dict_leaderboard()
     tweet_cards = [
         TweetCard(tweet_id=tweet_id, num_amps=num_amps, hide_media=False)
         for tweet_id, num_amps in result_dict.items()]
-    return render_template('index.html', title='Home', tweet_cards=tweet_cards)
+    return render_template('index.html', title=title, tweet_cards=tweet_cards)
 
 
 @bp.route('/user/<username>')
@@ -40,7 +41,7 @@ def user(username):
     page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(username=username).first_or_404()
     user_card = UserCard(user=user)
-    title = "{}'s Amp Profile".format(user.username)
+    title = "{}'s Profile".format(user.username)
 
     current_amp = Amp.query.filter_by(
         id=user.active_amp_id).first()
@@ -120,6 +121,7 @@ def twitter_user_search_results(query):
 @bp.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
+    title = 'Edit Profile'
     form = EditProfileForm(current_user.username)
     if form.validate_on_submit():
         current_user.username = form.username.data
@@ -130,7 +132,7 @@ def edit_profile():
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.about_me.data = current_user.about_me
-    return render_template('edit_profile.html', title='Edit Profile', form=form)
+    return render_template('edit_profile.html', title=title, form=form)
 
 
 @bp.route('/follow_twitter_user/<twitter_username>')
