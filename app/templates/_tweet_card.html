@@ -8,17 +8,17 @@
 
         {% if current_user.is_following_twitter_username(tweet_card.screen_name) %}
             <a href="{{ url_for('main.unfollow_twitter_user', twitter_username=tweet_card.screen_name) }}">
-                {{ 'Unfollow @{}'.format(tweet_card.screen_name) }}
+                {{ 'Unfollow' }}
             </a>
         {% else %}
             <a href="{{ url_for('main.follow_twitter_user', twitter_username=tweet_card.screen_name) }}">
-                {{ 'Follow @{}'.format(tweet_card.screen_name) }}
+                {{ 'Follow' }}
             </a>
         {% endif %}
 
         <span style="float:right;">
             <a href="{{ url_for('main.twitter_user', twitter_username=tweet_card.screen_name) }}">
-                {{ "Browse @{}'s Tweets".format(tweet_card.screen_name) }}
+                {{ "Browse Tweets" }}
             </a>
         </span>
     </p>
