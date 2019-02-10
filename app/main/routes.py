@@ -107,7 +107,7 @@ def twitter_user_search():
 def twitter_user_search_results(query):
     page = request.args.get('page', 1, type=int)
     title = 'Twitter User Search: {}'.format(query)
-    twitter_users = tu.get_users_search(term=query, page=page)
+    twitter_users = t_utils.get_users_search(query, page=page)
     twitter_user_cards = [TwitterUserCard(tu) for tu in twitter_users]
     next_url = url_for('main.twitter_user_search_results', query=query, page=page+1)
     prev_url = (url_for('main.twitter_user_search_results', query=query, page=page-1)
