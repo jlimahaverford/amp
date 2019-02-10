@@ -2,7 +2,7 @@ import datetime as dt
 from enum import Enum
 from typing import Tuple
 
-from app import db, twitter_api
+from app.main.twitter_utils import get_status_oembed, get_status
 from app.models import User
 from app.main.db_utils import get_num_amps_from_tweet_id
 
@@ -51,8 +51,8 @@ class TweetCard:
         if num_amps is None:
             num_amps = get_num_amps_from_tweet_id(tweet_id)
         self.num_amps = num_amps
-        self.status = twitter_api.GetStatus(status_id=tweet_id)
-        self.oembed = twitter_api.GetStatusOembed(status_id=tweet_id, hide_media=hide_media)
+        self.status = get_status(tweet_id=tweet_id)
+        self.oembed = get_status_oembed(tweet_id=tweet_id, hide_media=hide_media)
         self.event_tuple = event_tuple
         self.screen_name = self.status.user.screen_name
 

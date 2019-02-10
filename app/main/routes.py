@@ -8,8 +8,8 @@ from app.main.forms import EditProfileForm, SearchForm
 from app.models import User, TwitterUser, Tweet, Amp
 from app.main import bp
 from app.main.db_utils import get_amp_dict_from_ids, get_amp_dict_leaderboard, get_num_amps_from_tweet_id
-from app.main.utils import get_bigger_twitter_user_image_url
 from app.main.cards import UserCard, UserEvent, TweetCard, TwitterUserCard
+from app.main.twitter_utils import get_status
 
 
 @bp.before_request
@@ -169,7 +169,7 @@ def unfollow_twitter_user(twitter_username):
 def amp_tweet(tweet_id):
     tweet = Tweet.query.filter_by(id=tweet_id).first()
     if tweet is None:
-        twitter_tweet = twitter_api.GetStatus(tweet_id)
+        twitter_tweet = get_status(tweet_id)
         db.session.add(Tweet.from_twitter_tweet(twitter_tweet))
         db.session.commit()
         tweet = Tweet.query.filter_by(id=tweet_id).first()
