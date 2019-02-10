@@ -3,13 +3,13 @@ from datetime import datetime
 from flask import render_template, flash, redirect, url_for, request, current_app
 from flask_login import current_user, login_required
 
-from app import db, twitter_api
+from app import db
 from app.main.forms import EditProfileForm, SearchForm
 from app.models import User, TwitterUser, Tweet, Amp
 from app.main import bp
 from app.main.db_utils import get_amp_dict_from_ids, get_amp_dict_leaderboard, get_num_amps_from_tweet_id
 from app.main.cards import UserCard, UserEvent, TweetCard, TwitterUserCard
-from app.main.twitter_utils import get_status
+from app.main import twitter_utils as t_utils
 
 
 @bp.before_request
@@ -80,8 +80,8 @@ def twitter_user(twitter_username, max_id):
         db.session.commit()
         current_app.logger.info('Added TwitterUser: {}'.format(twitter_username))
 
-    twitter_user_card = TwitterUserCard(twitter_api.GetUser(screen_name=twitter_username))
-    tweets = twitter_api.GetUserTimeline(screen_name=twitter_username, count=10, include_rts=True, max_id=max_id)
+    twitter_user_card = TwitterUserCard(t_utils.get_user(twitter_username))
+    tweets = t_utils.get_user_timeline(twitter_username, max_id=max_id)
     tweet_ids = [t.id for t in tweets]
     result_dict = get_amp_dict_from_ids(tweet_ids)
     tweet_cards = [TweetCard(tweet_id=tweet_id, num_amps=result_dict.get(tweet_id, 0), hide_media=False)
@@ -107,7 +107,7 @@ def twitter_user_search():
 def twitter_user_search_results(query):
     page = request.args.get('page', 1, type=int)
     title = 'Twitter User Search: {}'.format(query)
-    twitter_users = twitter_api.GetUsersSearch(term=query, page=page, count=20)
+    twitter_users = tu.get_users_search(term=query, page=page)
     twitter_user_cards = [TwitterUserCard(tu) for tu in twitter_users]
     next_url = url_for('main.twitter_user_search_results', query=query, page=page+1)
     prev_url = (url_for('main.twitter_user_search_results', query=query, page=page-1)
@@ -169,7 +169,7 @@ def unfollow_twitter_user(twitter_username):
 def amp_tweet(tweet_id):
     tweet = Tweet.query.filter_by(id=tweet_id).first()
     if tweet is None:
-        twitter_tweet = get_status(tweet_id)
+        twitter_tweet = t_utils.get_status(tweet_id)
         db.session.add(Tweet.from_twitter_tweet(twitter_tweet))
         db.session.commit()
         tweet = Tweet.query.filter_by(id=tweet_id).first()
