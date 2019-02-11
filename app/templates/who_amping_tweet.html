@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 
-{% block app_content %}
+{% block top_content %}
 
     {% include '_tweet_card.html' %}
+
+{% endblock %}
+
+{% block list_content %}
 
     {% if user_cards %}
         <h2>Users: </h2>

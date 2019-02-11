@@ -1,18 +1,19 @@
 {% extends "base.html" %}
 
-{% block app_content %}
+{% block top_content %}
 
     {% include '_user_card.html' %}
-
-    <hr>
 
     <h2>Currently Amping:</h2>
         {% set tweet_card = current_amp_tweet_card %}
         {% include '_tweet_card.html' %}
 
-    <hr>
-
     <h2>Amp History:</h2>
+
+{% endblock %}
+
+{% block list_content %}
+
     {% for tweet_card in tweet_cards %}
         {% include '_tweet_card.html' %}
     {% endfor %}

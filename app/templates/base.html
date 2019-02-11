@@ -52,10 +52,17 @@
         {% endif %}
         {% endwith %}
 
-        {% block app_content %}{% endblock %}
+        {% block top_content %}{% endblock %}
 
         {% if (next_url or prev_url) %}
             {% include '_page_card.html' %}
         {% endif %}
+
+        {% block list_content %}{% endblock %}
+
+        {% if (next_url or prev_url) %}
+            {% include '_page_card.html' %}
+        {% endif %}
+
     </div>
 {% endblock %}

@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 
-<head>
-<meta name="twitter:widgets:theme" content="dark">
-</head>
+{% block list_content %}
 
-{% block app_content %}
 <div class="card-group">
     {% for tweet_card in tweet_cards %}
         {% include '_tweet_card.html' %}
     {% endfor %}
 </div>
+
 {% endblock %}

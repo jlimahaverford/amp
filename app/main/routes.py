@@ -4,12 +4,12 @@ from flask import render_template, flash, redirect, url_for, request, current_ap
 from flask_login import current_user, login_required
 
 from app import db
+from app.main import bp
+from app.main import twitter_utils as t_utils
+from app.main.cards import UserCard, UserEvent, TweetCard, TwitterUserCard
+from app.main.db_utils import get_amps_from_tweet_ids, get_amps_for_index, get_amps_by_user, get_users_amping_tweet
 from app.main.forms import EditProfileForm, SearchForm
 from app.models import User, TwitterUser, Tweet, Amp
-from app.main import bp
-from app.main.db_utils import get_amp_dict_from_ids, get_amp_dict_leaderboard, get_num_amps_from_tweet_id
-from app.main.cards import UserCard, UserEvent, TweetCard, TwitterUserCard
-from app.main import twitter_utils as t_utils
 
 
 @bp.before_request
@@ -23,14 +23,21 @@ def before_request():
 @bp.route('/index')
 @login_required
 def index():
-    #  TODO: Implement pagination using query()....pagination()
     #  TODO: Implement "Tweeted at <timestamp>"
+    page = request.args.get('page', 1, type=int)
     title = 'Home'
-    result_dict = get_amp_dict_leaderboard()
+    amp_counts = get_amps_for_index(page)
     tweet_cards = [
         TweetCard(tweet_id=tweet_id, num_amps=num_amps, hide_media=False)
-        for tweet_id, num_amps in result_dict.items()]
-    return render_template('index.html', title=title, tweet_cards=tweet_cards)
+        for tweet_id, num_amps in amp_counts.items]
+
+    next_url = (url_for('main.index', page=amp_counts.next_num)
+                if amp_counts.has_next else None)
+    prev_url = (url_for('main.user', page=amp_counts.prev_num)
+                if amp_counts.has_prev else None)
+    return render_template(
+        'index.html', title=title, tweet_cards=tweet_cards, next_url=next_url,
+        prev_url=prev_url)
 
 
 @bp.route('/user/<username>')
@@ -43,16 +50,12 @@ def user(username):
     user_card = UserCard(user=user)
     title = "{}'s Profile".format(user.username)
 
-    current_amp = Amp.query.filter_by(
-        id=user.active_amp_id).first()
+    current_amp = Amp.query.filter_by(id=user.active_amp_id).first()
     current_amp_tweet_card = TweetCard(tweet_id=current_amp.tweet_id, hide_media=False)
 
-    amps = Amp.query.filter_by(
-        user_id=user.id, is_active=False).order_by(
-        Amp.timestamp.desc()).paginate(
-        page, current_app.config['TWEETS_PER_PAGE'], False)
+    amps = get_amps_by_user(user.id, page)
     tweet_ids, timestamps = zip(*[(amp.tweet_id, amp.timestamp) for amp in amps.items])
-    result_dict = get_amp_dict_from_ids(list(set(tweet_ids)))
+    result_dict = get_amps_from_tweet_ids(list(set(tweet_ids)))
     tweet_cards = [TweetCard(tweet_id=tweet_id, num_amps=result_dict.get(tweet_id, 0))
              for tweet_id in tweet_ids]
 
@@ -71,7 +74,7 @@ def user(username):
 @login_required
 def twitter_user(twitter_username, max_id):
     #  TODO: Implement pagination using 'max_id' and 'since'
-    #  TODO: Implement "Tweeted at <timestamp>"
+    #  TODO: Implement "Tweeted/Retweeted at <timestamp>"
     title = "@{}'s Profile".format(twitter_username)
     twitter_user = TwitterUser.query.filter_by(twitter_username=twitter_username).first()
     if twitter_user is None:
@@ -83,7 +86,7 @@ def twitter_user(twitter_username, max_id):
     twitter_user_card = TwitterUserCard(t_utils.get_user(twitter_username))
     tweets = t_utils.get_user_timeline(twitter_username, max_id=max_id)
     tweet_ids = [t.id for t in tweets]
-    result_dict = get_amp_dict_from_ids(tweet_ids)
+    result_dict = get_amps_from_tweet_ids(tweet_ids)
     tweet_cards = [TweetCard(tweet_id=tweet_id, num_amps=result_dict.get(tweet_id, 0), hide_media=False)
              for tweet_id in tweet_ids]
     return render_template(
@@ -155,7 +158,6 @@ def follow_twitter_user(twitter_username):
 def unfollow_twitter_user(twitter_username):
     twitter_user = TwitterUser.query.filter_by(twitter_username=twitter_username).first()
     if twitter_user is None:
-        #  TODO: Replace with actual error
         flash('Error: Twitter User {} not found.'.format(twitter_username))
         return redirect(url_for('main.index'))
     current_user.unfollow_twitter_user(twitter_user)
@@ -202,13 +204,7 @@ def who_amping_tweet(tweet_id):
 
     tweet_card = TweetCard(tweet_id=tweet_id, hide_media=False)
     title = "Who's Amping @{}'s Tweet?".format(tweet_card.screen_name)
-    amps = db.session.query(
-        User, Amp).filter(
-        User.id == Amp.user_id).filter(
-        Amp.tweet_id == tweet_id).filter(
-        Amp.is_active).order_by(
-        Amp.timestamp.asc()).paginate(
-        page, current_app.config['TWEETS_PER_PAGE'], False)
+    amps = get_users_amping_tweet(tweet_id, page)
     user_cards = [
         UserCard(user, (UserEvent.AMPED_TWEET, amp.timestamp))
         for user, amp in amps.items]
