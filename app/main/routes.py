@@ -51,7 +51,10 @@ def user(username):
     title = "{}'s Profile".format(user.username)
 
     current_amp = Amp.query.filter_by(id=user.active_amp_id).first()
-    current_amp_tweet_card = TweetCard(tweet_id=current_amp.tweet_id, hide_media=False)
+    current_amp_tweet_card = TweetCard(
+        tweet_id=current_amp.tweet_id,
+        event_tuple=(TweetEvent.AMPED, current_amp.timestamp),
+        hide_media=False)
 
     amps = get_amps_by_user(user.id, page)
     tweet_ids, timestamps = zip(*[(amp.tweet_id, amp.timestamp) for amp in amps.items])
