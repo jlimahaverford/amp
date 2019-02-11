@@ -28,8 +28,13 @@
     </div>
 
     <p style="text-align:left;">
-        <a href="{{ url_for('main.who_amping_tweet', tweet_id=tweet_card.tweet_id) }}">
-            Who's Amping This?
-        </a>
+        {% if tweet_card.event_tuple %}
+        {{ tweet_card.event_tuple[0].display() + tweet_card.event_tuple[1].date().strftime('%b %d, %Y') }}.
+        {% endif %}
+        <span style="float:right;">
+            <a href="{{ url_for('main.who_amping_tweet', tweet_id=tweet_card.tweet_id) }}">
+                Who's Amping This?
+            </a>
+        </span>
     </p>
 </div>

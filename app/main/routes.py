@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from app import db
 from app.main import bp
 from app.main import twitter_utils as t_utils
-from app.main.cards import UserCard, UserEvent, TweetCard, TwitterUserCard
+from app.main.cards import UserCard, UserEvent, TweetCard, TweetEvent, TwitterUserCard
 from app.main.db_utils import get_amps_from_tweet_ids, get_amps_for_index, get_amps_by_user, get_users_amping_tweet
 from app.main.forms import EditProfileForm, SearchForm
 from app.models import User, TwitterUser, Tweet, Amp
@@ -56,8 +56,12 @@ def user(username):
     amps = get_amps_by_user(user.id, page)
     tweet_ids, timestamps = zip(*[(amp.tweet_id, amp.timestamp) for amp in amps.items])
     result_dict = get_amps_from_tweet_ids(list(set(tweet_ids)))
-    tweet_cards = [TweetCard(tweet_id=tweet_id, num_amps=result_dict.get(tweet_id, 0))
-             for tweet_id in tweet_ids]
+    tweet_cards = [
+        TweetCard(
+            tweet_id=amp.tweet_id,
+            num_amps=result_dict.get(amp.tweet_id, 0),
+            event_tuple=(TweetEvent.AMPED, amp.timestamp))
+        for amp in amps.items]
 
     next_url = (url_for('main.user', username=username, page=amps.next_num)
                 if amps.has_next else None)

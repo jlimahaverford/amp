@@ -1,4 +1,5 @@
 import datetime as dt
+import re
 from enum import Enum
 from typing import Tuple
 
@@ -53,8 +54,10 @@ class TweetCard:
         self.num_amps = num_amps
         self.status = get_status(tweet_id=tweet_id)
         self.oembed = get_status_oembed(tweet_id=tweet_id, hide_media=hide_media)
-        self.event_tuple = event_tuple
         self.screen_name = self.status.user.screen_name
+        if event_tuple is None:
+            event_tuple = (TweetEvent.TWEETED, dt.datetime.fromtimestamp(self.status.created_at_in_seconds))
+        self.event_tuple = event_tuple
 
 
 class TwitterUserCard:
